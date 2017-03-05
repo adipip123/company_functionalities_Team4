@@ -31,11 +31,14 @@ dataset = dataset[, -4]
 # remove overfitting
 dataset = dataset[, -13]
 dataset = dataset[, -10]
+
+# an extra bias column is added for ANN calculation
+dataset$bias <- array(1,dim = c(208,1))
 # creating a new dataset to rearrange the columns
-dataset_new <-data.frame(dataset$age,dataset$cp_asy,dataset$cp_asyang,dataset$cp_non_anginal,
+dataset_new <-data.frame(dataset$bias,dataset$age,dataset$cp_asy,dataset$cp_asyang,dataset$cp_non_anginal,
                          dataset$rest_bpress,dataset$blood_sugar,dataset$rest_electro_left,dataset$rest_electro_normal,
                          dataset$max_heart_rate,dataset$exercice_angina,dataset$disease)
-colnames(dataset_new)<-c("age","cp_asy","cp_asyang","cp_non_anginal",
+colnames(dataset_new)<-c("bias","age","cp_asy","cp_asyang","cp_non_anginal",
                          "rest_bpress","blood_sugar","rest_electro_left","rest_electro_normal",
                          "max_heart_rate","exercice_angina","disease")
 
@@ -50,7 +53,7 @@ colnames(dataset_new)<-c("age","cp_asy","cp_asyang","cp_non_anginal",
 # training_set <- subset(dataset_new, split == TRUE) #TEMP
 # test_set <- subset(dataset_new, split == FALSE)
 # feature scaling
-dataset_new[, c(1,5,9)] <- scale(dataset_new[, c(1,5,9)])
+dataset_new[, c(2,6,10)] <- scale(dataset_new[, c(2,6,10)])
 
 # creating a data frame 'prediction data' for adding the user's
 # input into the test set for prediction  
@@ -91,39 +94,45 @@ theLog <- function(x){
 
 # initialize variables
 cost <- 0
-alpha <- 6.75
-
-#if you increase alpha beyond this, jtheta will diverge
-
 jThetaPrev <- 100000
 jTheta <- 100
 difference <- 10
 nrts <- nrow(dataset_new)
 Hvec <-vector(mode= "double" ,length = nrts)
+
 # thetaVector has to be a multidimensional vector
-# each layer has a 2D vector for theta
-# and there are multiple layer(2-3 in our case)
+# each layer has a 2D vector for theta and there are multiple layer(2-3 in our case)
 # so there are be a 3D vector to store the coefficents for the ANN 
-thetaVector <- c(1,1,1,1,1,1,1,1,1,1,1)
+# creating a 3d vector
+thetaVector <- list()
+thetaVector[[1]] <- array(1,dim = c(10,11))
+thetaVector[[2]] <- matrix(1,nrow = 10,ncol = 11)
+thetaVector[[3]] <- matrix(1,nrow = 1,ncol = 11)
+
+# to store actual values of computation
+nodes <- matrix(1,nrow = 11,ncol = 3)
+
+# Forward Propogation
+row1 <- as.numeric(dataset_new[1,c(-12)])
+row2 <- as.numeric(dataset_new[2,c(-12)])
+
+# computing the linear sum of weights * node value and 
+# applying sigmoid to the computed value
+nodes[,1] <-row1                                                 # input layer i.e layer1
+nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
+nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
+nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
+nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
+output <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))          # output layer i.e layer4
+output <- 1/(1+exp(-output))
+
+# Backward Propogation
 
 
 # this while loop helps us to generate the coefficients for the classifier equation
 # it take approximately 2-3 minutes to run
-# after some tweaks by pooja,takes 10seconds to run
 # has to be run only once because the training set is static(constant)
 # after which the thetaVector can store the value of coefficients
-
-X1vec <- dataset_new[,1]
-X2vec <- dataset_new[,2]
-X3vec <- dataset_new[,3]
-X4vec <- dataset_new[,4]
-X5vec <- dataset_new[,5]
-X6vec <- dataset_new[,6]
-X7vec <- dataset_new[,7]
-X8vec <- dataset_new[,8]
-X9vec <- dataset_new[,9]
-X10vec <- dataset_new[,10]
-Yvec <- dataset_new[,11]
 
 while(difference != 0) {
   cost <- 0
