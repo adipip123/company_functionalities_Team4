@@ -31,7 +31,6 @@ dataset = dataset[, -4]
 # remove overfitting
 dataset = dataset[, -13]
 dataset = dataset[, -10]
-
 # an extra bias column is added for ANN calculation
 dataset$bias <- array(1,dim = c(208,1))
 # creating a new dataset to rearrange the columns
@@ -41,42 +40,22 @@ dataset_new <-data.frame(dataset$bias,dataset$age,dataset$cp_asy,dataset$cp_asya
 colnames(dataset_new)<-c("bias","age","cp_asy","cp_asyang","cp_non_anginal",
                          "rest_bpress","blood_sugar","rest_electro_left","rest_electro_normal",
                          "max_heart_rate","exercice_angina","disease")
-
 # checking the dataset for factors and anomalies before splitting
 # summary(dataset_new)
 
 # Splitting the dataset into the Training set and Test set
-# install.packages('caTools')
-# library(caTools)
-# set.seed(123)
-# split <- sample.split(dataset_new$disease, SplitRatio = .8)
-# training_set <- subset(dataset_new, split == TRUE) #TEMP
-# test_set <- subset(dataset_new, split == FALSE)
+install.packages('caTools')
+library(caTools)
+set.seed(123)
+split <- sample.split(dataset_new$disease, SplitRatio = .5)
+training_set <- subset(dataset_new, split == TRUE) #TEMP
+test_set <- subset(dataset_new, split == FALSE)
 # feature scaling
 dataset_new[, c(2,6,10)] <- scale(dataset_new[, c(2,6,10)])
-
-# creating a data frame 'prediction data' for adding the user's
-# input into the test set for prediction  
-# nrt <- nrow(dataset_new)
-# prediction_data <-data.frame(age=numeric(),cp_asy=numeric(),cp_asyang=numeric(),
-#                              cp_non_anginal=numeric(),rest_bpress=numeric(),blood_sugar=numeric(),
-#                              rest_electro_left=numeric(),rest_electro_normal=numeric(),
-#                              max_heart_rate=numeric(),exercice_angina=numeric(),disease=factor())
-# 
-# # appending one row of data from the user to data frame 
-# prediction_data <- cbind(age=43,cp_asy=1,cp_asyang=0,cp_non_anginal=0,
-#                      rest_bpress=140,blood_sugar=0,rest_electro_left=0,rest_electro_normal=1,
-#                      max_heart_rate=135,exercice_angina=1,disease=1)
-# # adding this value into the test set
-# test_set<-rbind(test_set,prediction_data)
-# tsa <- nrow(test_set)
-# # deleting the updated row,just in case
-# # test_set <- test_set[c(-tsa), ]
 
 # removing the variables not needed anymore
 rm(row_to_keep)
 # rm(split)
-# rm(dataset_backup)
 # done with pre_processing
 
 # ALGORITHM BEGINS
@@ -93,13 +72,13 @@ theLog <- function(x){
 }
 
 # initialize variables
+Yvec <- training_set$disease
 cost <- 0
 jThetaPrev <- 100000
 jTheta <- 100
 difference <- 10
-nrts <- nrow(dataset_new)
+nrts <- nrow(training_set)
 Hvec <-vector(mode= "double" ,length = nrts)
-
 # thetaVector has to be a multidimensional vector
 # each layer has a 2D vector for theta and there are multiple layer(2-3 in our case)
 # so there are be a 3D vector to store the coefficents for the ANN 
@@ -108,47 +87,46 @@ thetaVector <- list()
 thetaVector[[1]] <- array(1,dim = c(10,11))
 thetaVector[[2]] <- matrix(1,nrow = 10,ncol = 11)
 thetaVector[[3]] <- matrix(1,nrow = 1,ncol = 11)
+# thetaVector[[1]][1,] <- c(1,2,0.5,1,3,-2,3,-3,1,0.1,-1)
+# thetaVector[[1]][2,] <- c(1,2.5,1.5,1,1,3,3,-4,2,0.3,-0.7)
+# thetaVector[[1]][3,] <- c(2,1.5,2.5,1.1,1.3,3,4,-5,1,0.3,-0.7)
+# thetaVector[[1]][4,] <- c(3,0.3,3,1,-2,-3,2,-3,4,0.4,-1)
+# thetaVector[[1]][5,] <- c(2,0.1,2,3,-3,-4,1,-2,3,0.2,-0.4)
+# thetaVector[[1]][6,] <- c(-2,1,4,0.1,-0.2,-1.1,1,0.2,2,-2,-1)
+# thetaVector[[1]][7,] <- c(-2,1,0.3,2.1,-4,-3,2,3,1,0,3)
+# thetaVector[[1]][8,] <- c(-2,1,3,1.1,-2,-2,-1,0.2,-1,2,1)
+# thetaVector[[1]][9,] <- c(1,-2,3,-2.1,2,-3,-1,1.2,1,4,-2)
+# thetaVector[[1]][10,] <- c(1,-4,3,-2.1,1,4,1,1,1,4,-1)
+# thetaVector[[2]] <- thetaVector[[1]]
 
 # to store actual values of computation
 nodes <- matrix(1,nrow = 11,ncol = 3)
 
-# Forward Propogation
-row1 <- as.numeric(dataset_new[1,c(-12)])
-row2 <- as.numeric(dataset_new[2,c(-12)])
-
-# computing the linear sum of weights * node value and 
-# applying sigmoid to the computed value
-nodes[,1] <-row1                                                 # input layer i.e layer1
-nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
-nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
-nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
-nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
-output <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))          # output layer i.e layer4
-output <- 1/(1+exp(-output))
-
-# Backward Propogation
-
-
 # this while loop helps us to generate the coefficients for the classifier equation
-# it take approximately 2-3 minutes to run
-# has to be run only once because the training set is static(constant)
-# after which the thetaVector can store the value of coefficients
-
+# it take approximately --- minutes to run
+# has to be run only once because the training set is static(constant) after which the thetaVector can store the value of coefficients
 while(difference != 0) {
   cost <- 0
   jThetaPrev <- jTheta
   
-  
+  # Forward Propogation
   for (i in 1:nrts){
-    
-    thetaX <- thetaVector[1] + thetaVector[2]*as.numeric(X1vec[i]) + thetaVector[3]*as.numeric(X2vec[i]) + thetaVector[4]*as.numeric(X3vec[i]) + thetaVector[5]*as.numeric(X4vec[i]) + thetaVector[6]*as.numeric(X5vec[i]) +
-      thetaVector[7]*as.numeric(X6vec[i]) +thetaVector[8]*as.numeric(X7vec[i]) + thetaVector[9]*as.numeric(X8vec[i]) + thetaVector[10]*as.numeric(X9vec[i]) + thetaVector[11]*as.numeric(X10vec[i])
-    h <- 1/(1+exp(-thetaX))
+    # computing the linear sum of weights * node value and applying sigmoid to the computed value
+    nodes[,1] <-as.numeric(training_set[i,c(-12)])                   # input layer i.e layer1
+    nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
+    nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
+    nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
+    nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
+    h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
+    h <- 1/(1+exp(-h))
+    # testing of forward chaining working well(I think so)
+    # temp1 <- thetaVector[[2]][7,]    # sum(temp1 * nodes[,2])    # 1/(1+exp(0.4276424))
     Hvec[i] <- h
     cost <- as.numeric(cost - as.numeric(Yvec[i])*theLog(h) - (1-as.numeric(Yvec[i]))*theLog(1-h)) 
   }
   jTheta <- cost / nrts
   
+  # Backward Propogation
   temp <- (Hvec-Yvec)
   d0Vector <- temp      #this vector has no multiplicand as it is related to the intercept and no column
   d1Vector <- temp*X1vec
@@ -189,13 +167,6 @@ while(difference != 0) {
   print(paste (jTheta,difference, sep = " "))
 }
 
-# Current fitting of the training set for "heart_disease_male.csv" dataset gives theta as
-# thetaVector
-# 0.38574838 -0.07202112 -0.43727087 -3.15996655 -2.19736352 -0.04694301  1.18733454 -1.29032897 -0.04416490 -0.23220314  2.17574439
-# run this line if we are not running the while loop above;ie when there is no change in the dataset
-# thetaVector <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,
-#                  1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
-
 # clearing the unwanted variables to free memory
 rm(temp);rm(temp_vect)
 rm(d0);rm(d1);rm(d2);rm(d3);rm(d4);rm(d5);rm(d6);rm(d7);rm(d8);rm(d9);rm(d10)
@@ -210,18 +181,15 @@ Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )
 confMatrix = table(Yvec, Hvec)
 confMatrix
 
-
 # saving the vector in a .txt file
 thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
 write(thetaVectorSave, file = "cardiology_values.txt",
       ncolumns = if(is.character(thetaVectorSave)) 1 else 11,
       append = FALSE, sep = " ")
-
 # scale_vector <-c(47.932692,8.058679 ,133.629808 ,17.469434 ,137.581731 ,23.934150)
 scale_vector <-c(mean(dataset$age) , sd(dataset$age),
                  mean(dataset$rest_bpress) , sd(dataset$rest_bpress),
                  mean(dataset$max_heart_rate) , sd(dataset$max_heart_rate))
-
 write(scale_vector, file = "cardiology_scaling.txt",
       ncolumns = if(is.character(scale_vector)) 1 else 11,
       append = FALSE, sep = " ")
@@ -230,22 +198,6 @@ write(scale_vector, file = "cardiology_scaling.txt",
 # the condition of the test case
 # test_set[, c(1,5,9)] <- scale(test_set[, c(1,5,9)])
 
-# tp_variable1 <-  test_set[1] * thetaVector[2]
-# tp_variable2 <-  test_set[2] * thetaVector[3] 
-# tp_variable3 <-  test_set[3] * thetaVector[4] 
-# tp_variable4 <-  test_set[4] * thetaVector[5] 
-# tp_variable5 <-  test_set[5] * thetaVector[6] 
-# tp_variable6 <-  test_set[6] * thetaVector[7] 
-# tp_variable7 <-  test_set[7] * thetaVector[8] 
-# tp_variable8 <-  test_set[8] * thetaVector[9] 
-# tp_variable9 <-  test_set[9] * thetaVector[10] 
-# tp_variable10 <-  test_set[10] * thetaVector[11] 
-# 
-# thetaX_test_set <- vector(mode = "double",length = nrow(test_set))
-# thetaX_test_set <- thetaVector[1] + tp_variable1[,1] + tp_variable2[,1] + tp_variable3[,1] + 
-#                    tp_variable4[,1] + tp_variable5[,1] + tp_variable6[,1] + tp_variable7[,1] +
-#                    tp_variable8[,1] + tp_variable9[,1] + tp_variable10[,1]
-# hypothesis_sigmoid <- 1/(1+exp(-thetaX_test_set))
 # # converting the hypothesis into class values for better prediction
 # y_prediction <- ifelse(hypothesis_sigmoid >= 0.5 , 1 , 0 )      
 # # first confusion matrix for our algorithm
@@ -260,29 +212,3 @@ write(scale_vector, file = "cardiology_scaling.txt",
 # # checking the value of the last row of the test set(which is the user value)
 # ifelse(y_prediction[tsa]==1,print("You are diagnosed with a heart disease!Please take care."),
 #        print("Your test reports are negative.Thank you!"))
-
-# comparison of various algorithms
-# 1. linear classifier
-# building the linear classifier
-# classifier =glm(formula= disease ~ ., family = binomial,data= training_set)
-# prob_pred <-predict(classifier, type = 'response',newdata= test_set[-11])
-# # making the confusion matrix
-# cm<- table(test_set[, 11] , y_pred)
-# cm
-
-# # 2. naive bayes
-# # building the naive Bayes classifier
-# classifier_b <-naiveBayes(x=training_set[-11],y=training_set$disease)
-# # making the confusion matrix
-# cm1<- table(test_set[, 11] , y_pred_b)
-# cm1
-
-# # 3. SVM
-# # building the SVM gaussian classifier
-# classifier_s <- svm(formula = disease ~ .,data=training_set,
-#                   type='C-classification',kernel='radial')
-# # Predicting the Test set results
-# y_pred_s = predict(classifier_s, newdata = test_set[-11])
-# # Making the Confusion Matrix
-# cm2 = table(test_set[, 11], y_pred_s)
-# cm2
