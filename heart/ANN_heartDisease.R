@@ -44,18 +44,20 @@ colnames(dataset_new)<-c("bias","age","cp_asy","cp_asyang","cp_non_anginal",
 # summary(dataset_new)
 
 # Splitting the dataset into the Training set and Test set
-install.packages('caTools')
+# install.packages('caTools')
 library(caTools)
 set.seed(123)
 split <- sample.split(dataset_new$disease, SplitRatio = .5)
 training_set <- subset(dataset_new, split == TRUE) #TEMP
 test_set <- subset(dataset_new, split == FALSE)
 # feature scaling
-dataset_new[, c(2,6,10)] <- scale(dataset_new[, c(2,6,10)])
+# dataset_new[, c(2,6,10)] <- scale(dataset_new[, c(2,6,10)])
+training_set[, c(2,6,10)] <- scale(training_set[, c(2,6,10)])
+test_set[, c(2,6,10)] <- scale(test_set[, c(2,6,10)])
 
 # removing the variables not needed anymore
 rm(row_to_keep)
-# rm(split)
+rm(split)
 # done with pre_processing
 
 # ALGORITHM BEGINS
@@ -99,9 +101,14 @@ thetaVector[[3]] <- matrix(1,nrow = 1,ncol = 11)
 # thetaVector[[1]][10,] <- c(1,-4,3,-2.1,1,4,1,1,1,4,-1)
 # thetaVector[[2]] <- thetaVector[[1]]
 
-# to store actual values of computation
-nodes <- matrix(1,nrow = 11,ncol = 3)
+Delta <- list()
+Delta[[1]] <- array(0,dim = c(10,11))
+Delta[[2]] <- matrix(0,nrow = 10,ncol = 11)
+Delta[[3]] <- matrix(0,nrow = 1,ncol = 11)
 
+# to store actual values of computation
+nodes <- matrix(2,nrow = 11,ncol = 3)
+delta <- matrix(1,nrow = 11,ncol = 3)
 # this while loop helps us to generate the coefficients for the classifier equation
 # it take approximately --- minutes to run
 # has to be run only once because the training set is static(constant) after which the thetaVector can store the value of coefficients
@@ -109,60 +116,41 @@ while(difference != 0) {
   cost <- 0
   jThetaPrev <- jTheta
   
-  # Forward Propogation
-  for (i in 1:nrts){
-    # computing the linear sum of weights * node value and applying sigmoid to the computed value
-    nodes[,1] <-as.numeric(training_set[i,c(-12)])                   # input layer i.e layer1
-    nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
-    nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
-    nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
-    nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
-    h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
-    h <- 1/(1+exp(-h))
-    # testing of forward chaining working well(I think so)
-    # temp1 <- thetaVector[[2]][7,]    # sum(temp1 * nodes[,2])    # 1/(1+exp(0.4276424))
-    Hvec[i] <- h
-    cost <- as.numeric(cost - as.numeric(Yvec[i])*theLog(h) - (1-as.numeric(Yvec[i]))*theLog(1-h)) 
+    for (i in 1:nrts){
+      # Forward Propogation
+      # computing the linear sum of weights * node value and applying sigmoid to the computed value
+      nodes[,1] <-as.numeric(training_set[i,c(-12)])                   # input layer i.e layer1
+      nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
+      nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
+      nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
+      nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
+      h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
+      h <- 1/(1+exp(-h))
+      # testing of forward chaining working well(I think so)
+      # temp1 <- thetaVector[[2]][7,]    # sum(temp1 * nodes[,2])    # 1/(1+exp(0.4276424))
+      Hvec[i] <- h
+      cost <- as.numeric(cost - as.numeric(Yvec[i])*theLog(h) - (1-as.numeric(Yvec[i]))*theLog(1-h)) 
+      
+      # Backward Propogation
+      delta_last <- h-Yvec[i]
+      # delta(l) = transpose(theta)*delta(l+1) .* g_prime(z(l)) ;where g_prime() is derivative of activation fn
+      # g_prime comes out as g_prime(z(l)) = a(l) .* (1-a(l))
+      delta[,3] <- t(thetaVector[[3]])*delta_last * (nodes[,3]*(1-nodes[,3]))
+      delta[,2] <- t(thetaVector[[2]])*delta[,3] * (nodes[,2]*(1-nodes[,2]))
+      # delta[,1] is unused ,as there is no error in the 1st ie input layer;it is simply present for numbering purposes
+      Delta[[3]] <- Delta[[3]] + (delta_last*t(nodes[[3]]))
+      Delta[[2]] <- Delta[[2]] + (delta[,3]*t(nodes[[2]]))
+      Delta[[1]] <- Delta[[1]] + (delta[,2]*t(nodes[[1]]))
   }
   jTheta <- cost / nrts
   
-  # Backward Propogation
-  temp <- (Hvec-Yvec)
-  d0Vector <- temp      #this vector has no multiplicand as it is related to the intercept and no column
-  d1Vector <- temp*X1vec
-  d2Vector <- temp*X2vec
-  d3Vector <- temp*X3vec
-  d4Vector <- temp*X4vec
-  d5Vector <- temp*X5vec
-  d6Vector <- temp*X6vec
-  d7Vector <- temp*X7vec
-  d8Vector <- temp*X8vec
-  d9Vector <- temp*X9vec
-  d10Vector <- temp*X10vec
+  Delta[[3]] <- Delta[[3]]/nrts
+  Delta[[2]] <- Delta[[2]]/nrts
+  Delta[[1]] <- Delta[[1]]/nrts
   
-  d0 <- sum(d0Vector)/nrts
-  d1 <- sum(d1Vector)/nrts
-  d2 <- sum(d2Vector)/nrts
-  d3 <- sum(d3Vector)/nrts
-  d4 <- sum(d4Vector)/nrts
-  d5 <- sum(d5Vector)/nrts
-  d6 <- sum(d6Vector)/nrts
-  d7 <- sum(d7Vector)/nrts
-  d8 <- sum(d8Vector)/nrts
-  d9 <- sum(d9Vector)/nrts
-  d10 <- sum(d10Vector)/nrts
-  
-  thetaVector[1] <- thetaVector[1] - alpha*d0
-  thetaVector[2] <- thetaVector[2] - alpha*d1
-  thetaVector[3] <- thetaVector[3] - alpha*d2
-  thetaVector[4] <- thetaVector[4] - alpha*d3
-  thetaVector[5] <- thetaVector[5] - alpha*d4
-  thetaVector[6] <- thetaVector[6] - alpha*d5
-  thetaVector[7] <- thetaVector[7] - alpha*d6
-  thetaVector[8] <- thetaVector[8] - alpha*d7
-  thetaVector[9] <- thetaVector[9] - alpha*d8
-  thetaVector[10] <- thetaVector[10] - alpha*d9
-  thetaVector[11] <- thetaVector[11] -alpha*d10
+  thetaVector[[3]] <- thetaVector[[3]] - Delta[[3]]
+  thetaVector[[2]] <- thetaVector[[2]] - Delta[[2]]
+  thetaVector[[1]] <- thetaVector[[1]] - Delta[[1]]
   difference <- jThetaPrev - jTheta 
   print(paste (jTheta,difference, sep = " "))
 }
@@ -181,18 +169,18 @@ Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )
 confMatrix = table(Yvec, Hvec)
 confMatrix
 
-# saving the vector in a .txt file
-thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
-write(thetaVectorSave, file = "cardiology_values.txt",
-      ncolumns = if(is.character(thetaVectorSave)) 1 else 11,
-      append = FALSE, sep = " ")
-# scale_vector <-c(47.932692,8.058679 ,133.629808 ,17.469434 ,137.581731 ,23.934150)
-scale_vector <-c(mean(dataset$age) , sd(dataset$age),
-                 mean(dataset$rest_bpress) , sd(dataset$rest_bpress),
-                 mean(dataset$max_heart_rate) , sd(dataset$max_heart_rate))
-write(scale_vector, file = "cardiology_scaling.txt",
-      ncolumns = if(is.character(scale_vector)) 1 else 11,
-      append = FALSE, sep = " ")
+# # saving the vector in a .txt file
+# thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
+# write(thetaVectorSave, file = "cardiology_values.txt",
+#       ncolumns = if(is.character(thetaVectorSave)) 1 else 11,
+#       append = FALSE, sep = " ")
+# # scale_vector <-c(47.932692,8.058679 ,133.629808 ,17.469434 ,137.581731 ,23.934150)
+# scale_vector <-c(mean(dataset$age) , sd(dataset$age),
+#                  mean(dataset$rest_bpress) , sd(dataset$rest_bpress),
+#                  mean(dataset$max_heart_rate) , sd(dataset$max_heart_rate))
+# write(scale_vector, file = "cardiology_scaling.txt",
+#       ncolumns = if(is.character(scale_vector)) 1 else 11,
+#       append = FALSE, sep = " ")
 
 # now that we have found the values of theta,we can use it to for an equation for predicting 
 # the condition of the test case
