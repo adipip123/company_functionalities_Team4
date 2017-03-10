@@ -169,6 +169,31 @@ Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )
 confMatrix = table(Yvec, Hvec)
 confMatrix
 
+
+# initializing the test prediction vector
+Y_pred <-vector(mode= "double" ,length = nrts)
+# test set calculations
+for (i in 1:nrts){
+  # Forward Propogation
+  # computing the linear sum of weights * node value and applying sigmoid to the computed value
+  nodes[,1] <-as.numeric(test_set[i,c(-12)])                   # input layer i.e layer1
+  nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
+  nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
+  nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
+  nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
+  h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
+  h <- 1/(1+exp(-h))
+  Y_pred[i] <- h
+}
+
+# actual Y values
+Yvec1 <- test_set$disease
+# converting the hypothesis into yes or no inorder to check how well the equation fits the test set
+Y_pred <- ifelse(Y_pred >= 0.5 , 1 , 0 )      
+# first confusion matrix for our algorithm
+confMatrix1 = table(Yvec1, Y_pred)
+confMatrix1
+
 # # saving the vector in a .txt file
 # thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
 # write(thetaVectorSave, file = "cardiology_values.txt",
