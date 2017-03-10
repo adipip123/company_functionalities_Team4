@@ -89,17 +89,17 @@ thetaVector <- list()
 thetaVector[[1]] <- array(1,dim = c(10,11))
 thetaVector[[2]] <- matrix(1,nrow = 10,ncol = 11)
 thetaVector[[3]] <- matrix(1,nrow = 1,ncol = 11)
-# thetaVector[[1]][1,] <- c(1,2,0.5,1,3,-2,3,-3,1,0.1,-1)
-# thetaVector[[1]][2,] <- c(1,2.5,1.5,1,1,3,3,-4,2,0.3,-0.7)
-# thetaVector[[1]][3,] <- c(2,1.5,2.5,1.1,1.3,3,4,-5,1,0.3,-0.7)
-# thetaVector[[1]][4,] <- c(3,0.3,3,1,-2,-3,2,-3,4,0.4,-1)
-# thetaVector[[1]][5,] <- c(2,0.1,2,3,-3,-4,1,-2,3,0.2,-0.4)
-# thetaVector[[1]][6,] <- c(-2,1,4,0.1,-0.2,-1.1,1,0.2,2,-2,-1)
-# thetaVector[[1]][7,] <- c(-2,1,0.3,2.1,-4,-3,2,3,1,0,3)
-# thetaVector[[1]][8,] <- c(-2,1,3,1.1,-2,-2,-1,0.2,-1,2,1)
-# thetaVector[[1]][9,] <- c(1,-2,3,-2.1,2,-3,-1,1.2,1,4,-2)
-# thetaVector[[1]][10,] <- c(1,-4,3,-2.1,1,4,1,1,1,4,-1)
-# thetaVector[[2]] <- thetaVector[[1]]
+thetaVector[[1]][1,] <- c(1,2,0.5,1,3,-2,3,-3,1,0.1,-1)
+thetaVector[[1]][2,] <- c(1,2.5,1.5,1,1,3,3,-4,2,0.3,-0.7)
+thetaVector[[1]][3,] <- c(2,1.5,2.5,1.1,1.3,3,4,-5,1,0.3,-0.7)
+thetaVector[[1]][4,] <- c(3,0.3,3,1,-2,-3,2,-3,4,0.4,-1)
+thetaVector[[1]][5,] <- c(2,0.1,2,3,-3,-4,1,-2,3,0.2,-0.4)
+thetaVector[[1]][6,] <- c(-2,1,4,0.1,-0.2,-1.1,1,0.2,2,-2,-1)
+thetaVector[[1]][7,] <- c(-2,1,0.3,2.1,-4,-3,2,3,1,0,3)
+thetaVector[[1]][8,] <- c(-2,1,3,1.1,-2,-2,-1,0.2,-1,2,1)
+thetaVector[[1]][9,] <- c(1,-2,3,-2.1,2,-3,-1,1.2,1,4,-2)
+thetaVector[[1]][10,] <- c(1,-4,3,-2.1,1,4,1,1,1,4,-1)
+thetaVector[[2]] <- thetaVector[[1]]
 
 Delta <- list()
 Delta[[1]] <- array(0,dim = c(10,11))
@@ -112,7 +112,7 @@ delta <- matrix(1,nrow = 11,ncol = 3)
 # this while loop helps us to generate the coefficients for the classifier equation
 # it take approximately --- minutes to run
 # has to be run only once because the training set is static(constant) after which the thetaVector can store the value of coefficients
-while(difference != 0) {
+while(difference >= 0.0000000001) {
   cost <- 0
   jThetaPrev <- jTheta
   
@@ -139,8 +139,8 @@ while(difference != 0) {
     delta[,2] <- t(thetaVector[[2]]) %*% delta[c(-1),3] * (nodes[,2]*(1-nodes[,2]))
     # delta[,1] is unused ,as there is no error in the 1st ie input layer;it is simply present for numbering purposes
     Delta[[3]] <- Delta[[3]] + (delta_last*t(nodes[,3]))
-    Delta[[2]] <- Delta[[2]] + (delta[,3]*t(nodes[,2]))
-    Delta[[1]] <- Delta[[1]] + (delta[,2]*t(nodes[,1]))
+    Delta[[2]] <- Delta[[2]] + (delta[c(-1),3] %*% t(nodes[,2]))
+    Delta[[1]] <- Delta[[1]] + (delta[c(-1),2] %*% t(nodes[,1]))
   }
   jTheta <- cost / nrts
   
