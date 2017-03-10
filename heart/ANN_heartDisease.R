@@ -116,31 +116,31 @@ while(difference != 0) {
   cost <- 0
   jThetaPrev <- jTheta
   
-    for (i in 1:nrts){
-      # Forward Propogation
-      # computing the linear sum of weights * node value and applying sigmoid to the computed value
-      nodes[,1] <-as.numeric(training_set[i,c(-12)])                   # input layer i.e layer1
-      nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
-      nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
-      nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
-      nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
-      h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
-      h <- 1/(1+exp(-h))
-      # testing of forward chaining working well(I think so)
-      # temp1 <- thetaVector[[2]][7,]    # sum(temp1 * nodes[,2])    # 1/(1+exp(0.4276424))
-      Hvec[i] <- h
-      cost <- as.numeric(cost - as.numeric(Yvec[i])*theLog(h) - (1-as.numeric(Yvec[i]))*theLog(1-h)) 
-      
-      # Backward Propogation
-      delta_last <- h-Yvec[i]
-      # delta(l) = transpose(theta)*delta(l+1) .* g_prime(z(l)) ;where g_prime() is derivative of activation fn
-      # g_prime comes out as g_prime(z(l)) = a(l) .* (1-a(l))
-      delta[,3] <- t(thetaVector[[3]])*delta_last * (nodes[,3]*(1-nodes[,3]))
-      delta[,2] <- t(thetaVector[[2]])*delta[,3] * (nodes[,2]*(1-nodes[,2]))
-      # delta[,1] is unused ,as there is no error in the 1st ie input layer;it is simply present for numbering purposes
-      Delta[[3]] <- Delta[[3]] + (delta_last*t(nodes[[3]]))
-      Delta[[2]] <- Delta[[2]] + (delta[,3]*t(nodes[[2]]))
-      Delta[[1]] <- Delta[[1]] + (delta[,2]*t(nodes[[1]]))
+  for (i in 1:nrts){
+    # Forward Propogation
+    # computing the linear sum of weights * node value and applying sigmoid to the computed value
+    nodes[,1] <-as.numeric(training_set[i,c(-12)])                   # input layer i.e layer1
+    nodes[,2] <- c(1,as.numeric(thetaVector[[1]] %*% nodes[,1]))     # hidden layer1 i.e layer2
+    nodes[c(-1),2] <- 1/(1+exp(-nodes[c(-1),2]))
+    nodes[,3] <- c(1,as.numeric(thetaVector[[2]] %*% nodes[,2]))     # hidden layer2 i.e layer3
+    nodes[c(-1),3] <- 1/(1+exp(-nodes[c(-1),3]))
+    h <- sum(as.numeric(thetaVector[[3]] * nodes[,3]))               # output layer i.e layer4
+    h <- 1/(1+exp(-h))
+    # testing of forward chaining working well(I think so)
+    # temp1 <- thetaVector[[2]][7,]    # sum(temp1 * nodes[,2])    # 1/(1+exp(0.4276424))
+    Hvec[i] <- h
+    cost <- as.numeric(cost - as.numeric(Yvec[i])*theLog(h) - (1-as.numeric(Yvec[i]))*theLog(1-h)) 
+    
+    # Backward Propogation
+    delta_last <- h-Yvec[i]
+    # delta(l) = transpose(theta)*delta(l+1) .* g_prime(z(l)) ;where g_prime() is derivative of activation fn
+    # g_prime comes out as g_prime(z(l)) = a(l) .* (1-a(l))
+    delta[,3] <- t(thetaVector[[3]])*delta_last * (nodes[,3]*(1-nodes[,3]))
+    delta[,2] <- t(thetaVector[[2]]) %*% delta[c(-1),3] * (nodes[,2]*(1-nodes[,2]))
+    # delta[,1] is unused ,as there is no error in the 1st ie input layer;it is simply present for numbering purposes
+    Delta[[3]] <- Delta[[3]] + (delta_last*t(nodes[,3]))
+    Delta[[2]] <- Delta[[2]] + (delta[,3]*t(nodes[,2]))
+    Delta[[1]] <- Delta[[1]] + (delta[,2]*t(nodes[,1]))
   }
   jTheta <- cost / nrts
   
