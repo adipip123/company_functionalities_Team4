@@ -29,6 +29,13 @@ dataset$Bare_Nuclei <- as.numeric(as.character(dataset$Bare_Nuclei))
 # Splitting the dataset into the Training set and Test set
 # install.packages('caTools')
 # feature scaling
+mean1 <-c(mean(dataset$Clump_Thickness),mean(dataset$CellSizeUniformity),mean(dataset$CellShapeUniformity),
+          mean(dataset$Marginal_Adhesion),mean(dataset$Single_Epithelial_Cell_Size),mean(dataset$Bare_Nuclei),
+          mean(dataset$Bland_Chromatin),mean(dataset$Normal_Nucleoli),mean(dataset$Mitoses))
+sd1 <- c(sd(dataset$Clump_Thickness),sd(dataset$CellSizeUniformity),sd(dataset$CellShapeUniformity),
+         sd(dataset$Marginal_Adhesion),sd(dataset$Single_Epithelial_Cell_Size),sd(dataset$Bare_Nuclei),
+         sd(dataset$Bland_Chromatin),sd(dataset$Normal_Nucleoli),sd(dataset$Mitoses))
+
 dataset[,c(-1,-11)] <- scale(dataset[, c(-1,-11)])
 library(caTools)
 set.seed(123)
@@ -187,6 +194,20 @@ rm(delta1);rm(delta2);rm(delta3);rm(delta_last);rm(Delta)
 rm(nodes1);rm(nodes2);rm(nodes3);
 rm(jTheta);rm(jThetaPrev);rm(i);rm(theLog);rm(nrts);rm(h)
 rm(confMatrix);rm(confMatrix1);rm(nrts1);
+
+thetaVector[[1]][1,] <- c( 0.8994418, 2.305433,0.6608289, 1.2135491, 2.6736151,-2.061957, 2.9914579,-2.58318003,1.508388, 1.31004988)
+thetaVector[[1]][2,] <- c(-0.8318523, 2.304946,1.0765075, 0.9392233, 0.5463855, 1.007979, 3.9487657,-3.07417550,2.062788, 3.81668193)
+thetaVector[[1]][3,] <- c( 2.2123960, 1.617580,2.4704539, 1.0836505, 0.9110368, 2.594223, 4.4523135,-4.60819612,1.207236, 1.51936531)
+thetaVector[[1]][4,] <- c( 3.9713265,-0.338702,2.5003158, 0.1665377,-1.6454859,-2.758862, 1.1059235,-3.96152141,3.615237,-0.37543658)
+thetaVector[[1]][5,] <- c( 4.6622560,-1.047402,0.7647223, 1.2439348,-2.6128863,-2.765602,-0.9145395,-2.82973174,2.625558,-1.05261068)
+thetaVector[[1]][6,] <- c(-3.0935496, 1.068330,3.6763729,-0.4351644,-0.5528682,-1.690256, 1.4366553, 0.07022067,1.642077,-0.03984931)
+
+thetaVector[[2]][1,] <- c(-0.3135374,1.924870,0.288705,0.5729178, 2.213567,-2.799968,2.992319)
+thetaVector[[2]][2,] <- c( 1.3180953,2.524378,1.603968,1.1343791, 1.067275, 3.084568,3.003460)
+thetaVector[[2]][3,] <- c( 2.1218275,1.514147,2.525344,1.1409179, 1.325650, 3.034326,4.001421)
+thetaVector[[2]][4,] <- c( 0.3711327,1.969175,4.632560,0.4365460,-2.395922,-3.400496,2.433149)
+
+thetaVector[[3]][1,] <- c(-2.505007,1.36726,-2.166541,-2.387827,9.395507)
 
 # saving the vector in a .txt file
 thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
