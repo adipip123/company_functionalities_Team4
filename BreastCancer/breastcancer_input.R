@@ -17,8 +17,8 @@ nodes3 <- matrix(2,nrow = 5,ncol = 1)
 
 mean1 <- c(4.442167,3.150805,3.215227,2.830161,3.234261,3.544656,3.445095,2.869693,1.603221)
 sd1 <- c(2.820761,3.065145,2.988581,2.864562,2.223085,3.643857,2.449697,3.052666,1.732674)
-# nodes1 <- as.numeric(as.character(args))
-nodes1 <- c(1,5,1,1,1,2,1,3,1,1)
+nodes1 <- as.numeric(as.character(args))
+# nodes1 <- c(1,5,1,1,1,2,1,3,1,1)
 nodes1[2] <- (nodes1[2]-mean1[1])/sd1[1] 
 nodes1[3] <- (nodes1[3]-mean1[2])/sd1[2] 
 nodes1[4] <- (nodes1[4]-mean1[3])/sd1[3] 
