@@ -45,7 +45,7 @@ dataset$Age <- ifelse(is.na(dataset$Age),median(dataset$Age,na.rm = T),dataset$A
 # checking the dataset
 summary(dataset)
 # removing unwanted variables
-rm(dataset_new);rm(w);rm(row_to_keep)
+rm(dataset_new);rm(row_to_keep)
 # feature scaling
 dataset[,c(2,15,16,17,18,19)]<-scale(dataset[,c(2,15,16,17,18,19)])
 mean1 <-c(mean(dataset$Age),mean(dataset$TSH),mean(dataset$T3),mean(dataset$TT4),mean(dataset$T4U),mean(dataset$FTI))
@@ -125,7 +125,7 @@ delta3 <- matrix(1,nrow = 5,ncol = 1)
 # this while loop helps us to generate the coefficients for the classifier equation
 # it take approximately --- minutes to run
 # has to be run only once because the training set is static(constant) after which the thetaVector can store the value of coefficients
-while(difference >= 0.0000000001) {
+while(difference !=0) {
   cost <- 0
   jThetaPrev <- jTheta
   
@@ -208,21 +208,16 @@ rm(nodes1);rm(nodes2);rm(nodes3);
 rm(jTheta);rm(jThetaPrev);rm(i);rm(theLog);rm(nrts);rm(h)
 rm(confMatrix);rm(confMatrix1);rm(nrts1);
 
-# saving the vector in a .txt file
-thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
-write(thetaVectorSave, file = "cardiology_values.txt",
-      ncolumns = if(is.character(thetaVectorSave)) 1 else 11,
-      append = FALSE, sep = " ")
-
-# scale_vector <-c(47.932692,8.058679 ,133.629808 ,17.469434 ,137.581731 ,23.934150)
-scale_vector <-c(mean(dataset$age) , sd(dataset$age),
-                 mean(dataset$rest_bpress) , sd(dataset$rest_bpress),
-                 mean(dataset$max_heart_rate) , sd(dataset$max_heart_rate))
-
-write(scale_vector, file = "cardiology_scaling.txt",
-      ncolumns = if(is.character(scale_vector)) 1 else 11,
-      append = FALSE, sep = " ")
-
-# # checking the value of the last row of the test set(which is the user value)
-ifelse(y_prediction[tsa]==1,print("You are diagnosed with thyroid.Please take care."),
-       print("Your test reports are negative.Thank you!"))
+# actual theta values
+# thetaVector[[1]][1,] <- c( 3.184092506,-0.2104124,0.9447944,-0.36752699, 3.5133108,-0.2384542, 2.6730670,-2.3557106,-0.351090, 0.1036154,1.82233249, 0.9985610, 1.0000972, 0.6079438, 4.775772, 3.1452026,-3.4395866, 2.48948976, 1.681510)
+# thetaVector[[1]][2,] <- c( 0.009643093, 0.3509314,1.4443006, 1.12208674, 0.5970475, 2.5904003, 2.9072248,-4.4291315, 2.797048, 0.2930750,0.46032079, 2.9687844, 0.9999666,-1.7625798,-4.750613, 0.7793923,-2.9173215, 2.28854046, 1.172772)
+# thetaVector[[1]][3,] <- c( 1.647890188, 1.4863741,2.5659085, 1.07931475, 1.2858743, 2.9841338, 3.9833602,-5.1134703, 1.050675, 0.3028193,3.99790875, 0.1026013,-0.2000006,-1.1522944, 1.033473, 0.2363663, 2.1000610,-1.98425868,-3.035500)
+# thetaVector[[1]][4,] <- c( 4.386108572, 0.5212237,3.1936306, 1.20918766,-1.8858095,-2.9404623, 2.0230918,-2.6164069, 3.973613, 0.4060316,0.07118827,-0.3178324, 1.0000005,-1.9345198, 2.794238,-1.8399175,-0.9190690, 2.24616280,-2.253341)
+# thetaVector[[1]][5,] <- c( 4.008665836, 0.4591512,0.3073554, 0.98577795,-3.2002585,-3.7802401,-0.6702778, 1.0461468, 1.230488, 0.2034262,0.20434906, 0.2067138, 3.0000001,-2.4942762,-2.701160, 7.4950515,-0.8636152, 0.02824073, 2.085857)
+# thetaVector[[1]][6,] <- c(-4.666187310,-0.2886736,2.4423188, 0.01775112,-0.1310706,-0.9739892, 1.8423114, 0.1882513, 1.900365,-2.0015595,2.85699003, 0.7936993, 3.0000000, 0.8520059,-2.386935,-3.0069463, 1.6116273,-1.62781373, 2.928950)
+# 
+# thetaVector[[2]][1,] <- c(1.2456005, 2.082875,0.5802485,1.0857512,3.0888851,-1.798201,3.068337)
+# thetaVector[[2]][2,] <- c(0.9577445, 2.491427,1.5096398,1.0030541,0.9038489, 3.014610,3.012517)
+# thetaVector[[2]][3,] <- c(1.9818805, 1.492868,2.5017794,1.0954172,1.2720129, 3.004684,4.002619)
+# thetaVector[[2]][4,] <- c(1.1371135,-4.905490,2.6899136,0.1846345,0.3865531,-6.111258,2.312163)
+# thetaVector[[3]][1,] <- c(-1.373597,-0.7641775,-1.398335,-1.383123,8.038285)
