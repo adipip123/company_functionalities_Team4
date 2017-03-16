@@ -206,7 +206,8 @@ rm(X1vec);rm(X2vec);rm(X3vec);rm(X4vec);rm(X5vec);rm(X6vec);rm(X7vec);rm(X8vec);
 rm(d0Vector);rm(d1Vector);rm(d2Vector);rm(d3Vector);rm(d4Vector);rm(d5Vector);rm(d6Vector);rm(d7Vector);rm(d8Vector);rm(d9Vector);rm(d10Vector)
 
 # saving the vector in a .txt file
-thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
+# these are the updated values after test set inclusion
+thetaVectorSave <- c(-0.29133598,-0.48529426,-0.85536890,-3.13240350,-3.38590462,0.02224551,0.67382899,-9.11134067,1.25501437,-0.62553720,2.35448797)
 write(thetaVectorSave, file = "cardiology_values.txt",
       ncolumns = if(is.character(thetaVectorSave)) 1 else 11,
       append = FALSE, sep = " ")
