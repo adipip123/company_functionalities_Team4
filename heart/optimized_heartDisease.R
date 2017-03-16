@@ -42,35 +42,17 @@ colnames(dataset_new)<-c("age","cp_asy","cp_asyang","cp_non_anginal",
 
 # Splitting the dataset into the Training set and Test set
 # install.packages('caTools')
-# library(caTools)
-# set.seed(123)
-# split <- sample.split(dataset_new$disease, SplitRatio = .8)
-# training_set <- subset(dataset_new, split == TRUE) #TEMP
-# test_set <- subset(dataset_new, split == FALSE)
+library(caTools)
+set.seed(123)
 # feature scaling
 dataset_new[, c(1,5,9)] <- scale(dataset_new[, c(1,5,9)])
-
-# creating a data frame 'prediction data' for adding the user's
-# input into the test set for prediction  
-# nrt <- nrow(dataset_new)
-# prediction_data <-data.frame(age=numeric(),cp_asy=numeric(),cp_asyang=numeric(),
-#                              cp_non_anginal=numeric(),rest_bpress=numeric(),blood_sugar=numeric(),
-#                              rest_electro_left=numeric(),rest_electro_normal=numeric(),
-#                              max_heart_rate=numeric(),exercice_angina=numeric(),disease=factor())
-# 
-# # appending one row of data from the user to data frame 
-# prediction_data <- cbind(age=43,cp_asy=1,cp_asyang=0,cp_non_anginal=0,
-#                      rest_bpress=140,blood_sugar=0,rest_electro_left=0,rest_electro_normal=1,
-#                      max_heart_rate=135,exercice_angina=1,disease=1)
-# # adding this value into the test set
-# test_set<-rbind(test_set,prediction_data)
-# tsa <- nrow(test_set)
-# # deleting the updated row,just in case
-# # test_set <- test_set[c(-tsa), ]
+split <- sample.split(dataset_new$disease, SplitRatio = .6)
+training_set <- subset(dataset_new, split == TRUE) #TEMP
+test_set <- subset(dataset_new, split == FALSE)
 
 # removing the variables not needed anymore
 rm(row_to_keep)
-# rm(split)
+rm(split)
 # rm(dataset_backup)
 # done with pre_processing
 
@@ -97,7 +79,7 @@ jThetaPrev <- 100000
 jTheta <- 100
 difference <- 10
 thetaVector <- c(1,1,1,1,1,1,1,1,1,1,1)
-nrts <- nrow(dataset_new)
+nrts <- nrow(training_set)
 Hvec <-vector(mode= "double" ,length = nrts)
 
 # this while loop helps us to generate the coefficients for the classifier equation
@@ -105,17 +87,17 @@ Hvec <-vector(mode= "double" ,length = nrts)
 # has to be run only once because the training set is static(constant)
 # after which the thetaVector can store the value of coefficients
 
-X1vec <- dataset_new[,1]
-X2vec <- dataset_new[,2]
-X3vec <- dataset_new[,3]
-X4vec <- dataset_new[,4]
-X5vec <- dataset_new[,5]
-X6vec <- dataset_new[,6]
-X7vec <- dataset_new[,7]
-X8vec <- dataset_new[,8]
-X9vec <- dataset_new[,9]
-X10vec <- dataset_new[,10]
-Yvec <- dataset_new[,11]
+X1vec <- training_set[,1]
+X2vec <- training_set[,2]
+X3vec <- training_set[,3]
+X4vec <- training_set[,4]
+X5vec <- training_set[,5]
+X6vec <- training_set[,6]
+X7vec <- training_set[,7]
+X8vec <- training_set[,8]
+X9vec <- training_set[,9]
+X10vec <- training_set[,10]
+Yvec <- training_set[,11]
 
 while(difference != 0) {
   cost <- 0
@@ -172,6 +154,42 @@ while(difference != 0) {
   print(paste (jTheta,difference, sep = " "))
 }
 
+# converting the hypothesis into yes or no inorder to check how well the equation fits the training set
+Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )      
+# first confusion matrix for our algorithm
+confMatrix = table(Yvec, Hvec)
+confMatrix
+
+# checking the test set results
+nrts1 <- nrow(test_set)
+Hvec <-vector(mode= "double" ,length = nrts1)
+
+X1vec <- test_set[,1]
+X2vec <- test_set[,2]
+X3vec <- test_set[,3]
+X4vec <- test_set[,4]
+X5vec <- test_set[,5]
+X6vec <- test_set[,6]
+X7vec <- test_set[,7]
+X8vec <- test_set[,8]
+X9vec <- test_set[,9]
+X10vec <- test_set[,10]
+Yvec <- test_set[,11]
+
+for (i in 1:nrts1){
+  
+  thetaX <- thetaVector[1] + thetaVector[2]*as.numeric(X1vec[i]) + thetaVector[3]*as.numeric(X2vec[i]) + thetaVector[4]*as.numeric(X3vec[i]) + thetaVector[5]*as.numeric(X4vec[i]) + thetaVector[6]*as.numeric(X5vec[i]) +
+    thetaVector[7]*as.numeric(X6vec[i]) +thetaVector[8]*as.numeric(X7vec[i]) + thetaVector[9]*as.numeric(X8vec[i]) + thetaVector[10]*as.numeric(X9vec[i]) + thetaVector[11]*as.numeric(X10vec[i])
+  h <- 1/(1+exp(-thetaX))
+  Hvec[i] <- h
+}
+
+# converting the hypothesis into yes or no inorder to check how well the equation fits the test set
+Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )      
+# first confusion matrix for our algorithm
+confMatrix1 = table(Yvec, Hvec)
+confMatrix1
+
 # Current fitting of the training set for "heart_disease_male.csv" dataset gives theta as
 # thetaVector
 # 0.38574838 -0.07202112 -0.43727087 -3.15996655 -2.19736352 -0.04694301  1.18733454 -1.29032897 -0.04416490 -0.23220314  2.17574439
@@ -186,13 +204,6 @@ rm(x1);rm(x2);rm(x3);rm(x4);rm(x5);rm(x6);rm(x7);rm(x8);rm(x9);rm(x10)
 rm(difference);rm(jTheta);rm(jThetaPrev);rm(i);rm(alpha);rm(cost);rm(nrts);rm(y);rm(h);rm(thetaX)
 rm(X1vec);rm(X2vec);rm(X3vec);rm(X4vec);rm(X5vec);rm(X6vec);rm(X7vec);rm(X8vec);rm(X9vec);rm(X10vec)
 rm(d0Vector);rm(d1Vector);rm(d2Vector);rm(d3Vector);rm(d4Vector);rm(d5Vector);rm(d6Vector);rm(d7Vector);rm(d8Vector);rm(d9Vector);rm(d10Vector)
-
-# converting the hypothesis into yes or no inorder to check how well the equation fits the training set
-Hvec <- ifelse(Hvec >= 0.5 , 1 , 0 )      
-# first confusion matrix for our algorithm
-confMatrix = table(Yvec, Hvec)
-confMatrix
-
 
 # saving the vector in a .txt file
 thetaVectorSave <- c(0.38574838,-0.07202112,-0.43727087,-3.15996655,-2.19736352,-0.04694301,1.18733454,-1.29032897,-0.04416490,-0.23220314,2.17574439)
@@ -209,63 +220,7 @@ write(scale_vector, file = "cardiology_scaling.txt",
       ncolumns = if(is.character(scale_vector)) 1 else 11,
       append = FALSE, sep = " ")
 
-# now that we have found the values of theta,we can use it to for an equation for predicting 
-# the condition of the test case
-# test_set[, c(1,5,9)] <- scale(test_set[, c(1,5,9)])
-
-# tp_variable1 <-  test_set[1] * thetaVector[2]
-# tp_variable2 <-  test_set[2] * thetaVector[3] 
-# tp_variable3 <-  test_set[3] * thetaVector[4] 
-# tp_variable4 <-  test_set[4] * thetaVector[5] 
-# tp_variable5 <-  test_set[5] * thetaVector[6] 
-# tp_variable6 <-  test_set[6] * thetaVector[7] 
-# tp_variable7 <-  test_set[7] * thetaVector[8] 
-# tp_variable8 <-  test_set[8] * thetaVector[9] 
-# tp_variable9 <-  test_set[9] * thetaVector[10] 
-# tp_variable10 <-  test_set[10] * thetaVector[11] 
-# 
-# thetaX_test_set <- vector(mode = "double",length = nrow(test_set))
-# thetaX_test_set <- thetaVector[1] + tp_variable1[,1] + tp_variable2[,1] + tp_variable3[,1] + 
-#                    tp_variable4[,1] + tp_variable5[,1] + tp_variable6[,1] + tp_variable7[,1] +
-#                    tp_variable8[,1] + tp_variable9[,1] + tp_variable10[,1]
-# hypothesis_sigmoid <- 1/(1+exp(-thetaX_test_set))
-# # converting the hypothesis into class values for better prediction
-# y_prediction <- ifelse(hypothesis_sigmoid >= 0.5 , 1 , 0 )      
-# # first confusion matrix for our algorithm
-# confMatrix_test = table(test_set[,11], y_prediction)
-# confMatrix_test
-
 # clearing the unwanted variables to free memory
 rm(thetaX_test_set)
 rm(tp_variable1);rm(tp_variable2);rm(tp_variable3);rm(tp_variable4);rm(tp_variable5)
 rm(tp_variable6);rm(tp_variable7);rm(tp_variable8);rm(tp_variable9);rm(tp_variable10)
-
-# # checking the value of the last row of the test set(which is the user value)
-ifelse(y_prediction[tsa]==1,print("You are diagnosed with a heart disease!Please take care."),
-       print("Your test reports are negative.Thank you!"))
-
-# comparison of various algorithms
-# 1. linear classifier
-# building the linear classifier
-# classifier =glm(formula= disease ~ ., family = binomial,data= training_set)
-# prob_pred <-predict(classifier, type = 'response',newdata= test_set[-11])
-# # making the confusion matrix
-# cm<- table(test_set[, 11] , y_pred)
-# cm
-
-# # 2. naive bayes
-# # building the naive Bayes classifier
-# classifier_b <-naiveBayes(x=training_set[-11],y=training_set$disease)
-# # making the confusion matrix
-# cm1<- table(test_set[, 11] , y_pred_b)
-# cm1
-
-# # 3. SVM
-# # building the SVM gaussian classifier
-# classifier_s <- svm(formula = disease ~ .,data=training_set,
-#                   type='C-classification',kernel='radial')
-# # Predicting the Test set results
-# y_pred_s = predict(classifier_s, newdata = test_set[-11])
-# # Making the Confusion Matrix
-# cm2 = table(test_set[, 11], y_pred_s)
-# cm2
