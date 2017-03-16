@@ -4,24 +4,26 @@ dataset<- data.frame(dataset_new$V1,dataset_new$V2,dataset_new$V3,dataset_new$V4
                      dataset_new$V7,dataset_new$V8,dataset_new$V9,dataset_new$V10,dataset_new$V11)
 colnames(dataset)<-c('Age','Gender','TB','DB','Alkphos','Sgpt','Sgot','TP','ALB','A_G_Ratio','Selector')
 #converting to categorical columns to numeric data
+dataset$bias <- array(1,dim = c(nrow(dataset),1))
 dataset$Male <- ifelse(dataset$Gender=="Male",1,0)
 dataset$Female <- ifelse(dataset$Gender=='Female',1,0)
 #removing Gender column
 dataset<-dataset[,-2]
 #removing overfitting
-dataset<-dataset[,-12]
+dataset<-dataset[,-13]
 dataset$Selector<-ifelse(dataset$Selector==2,0,1)
 rm(dataset_new)
-dataset<-data.frame(dataset$Age,dataset$Male,dataset$TB,dataset$DB,
+dataset<-data.frame(dataset$bias,dataset$Age,dataset$Male,dataset$TB,dataset$DB,
                     dataset$Alkphos,dataset$Sgpt,dataset$Sgot,dataset$TP,
                     dataset$ALB,dataset$A_G_Ratio,dataset$Selector)
-colnames(dataset)<-c("Age","Male","TB","DB","Alkphos","Sgpt","Sgot","TP","ALB","A_G_Ratio","Selector")
-dataset[,c(1,3,4,5,6,7,8,9,10)]<-scale(dataset[,c(1,3,4,5,6,7,8,9,10)])
-summary(dataset)
+colnames(dataset)<-c("Bias","Age","Male","TB","DB","Alkphos","Sgpt","Sgot","TP","ALB","A_G_Ratio","Selector")
 
 row_to_keep <- !is.na(dataset$A_G_Ratio)
 # row_to_keep<-(dataset$rest_electro )
 dataset <-dataset[row_to_keep,]
+
+dataset[,c(-1,-3,-12)]<-scale(dataset[,c(-1,-3,-12)])
+summary(dataset)
 
 #install.packages('caTools')
 library(caTools)
@@ -50,6 +52,7 @@ theLog <- function(x){
 }
 
 # initialize variables
+Yvec <- training_set$Selector
 cost <- 0
 jThetaPrev <- 100000
 jTheta <- 100
@@ -170,9 +173,24 @@ for (i in 1:nrts1){
 }
 
 # actual Y values
-Yvec1 <- test_set$disease
+Yvec1 <- test_set$Selector
 # converting the hypothesis into yes or no inorder to check how well the equation fits the test set
 Y_pred <- ifelse(Y_pred >= 0.5 , 1 , 0 )      
 # first confusion matrix for our algorithm
 confMatrix1 = table(Yvec1, Y_pred)
 confMatrix1
+
+# actual theta values
+# thetaVector[[1]][1] <-c( 1.274273, 2.8828079,-0.199272,2.9920750, 3.461644,-3.490208, 4.2125664,-2.8905177, 1.214234440, 0.9527435,-0.07604228)
+# thetaVector[[1]][2] <-c( 1.744714, 3.0192890, 2.277894,2.0157912, 3.273331, 1.506106, 5.7312715,-2.6103635, 3.767230016,-0.5151855,-0.01735221)
+# thetaVector[[1]][3] <-c( 1.136149, 2.7508595, 5.068479,2.8376330, 2.737913, 3.924671, 2.8173088,-3.9838139, 2.512626113, 0.2415680,-1.18302992)
+# thetaVector[[1]][4] <-c( 4.809916, 1.4436257, 1.589138,0.1635847,-3.025903,-3.994436, 1.6762507,-2.9039664, 3.572884321, 0.1457456, 2.52329526)
+# thetaVector[[1]][5] <-c( 2.053245,-0.5970458, 1.871127,1.7333621,-4.934205,-3.584162,-0.4588633,-4.1337044, 1.327891848, 1.1724900, 0.16978120)
+# thetaVector[[1]][6] <-c(-1.050536, 0.5755462, 1.713746,0.4331910, 2.104801, 1.534730, 2.4763070, 0.3907125,-0.001583265,-2.0376112, 0.35644686)
+# 
+# thetaVector[[2]][1] <-c(-0.4375613, 3.128785,-1.076085,-1.695093,5.0740841,-2.509067,1.861448)
+# thetaVector[[2]][2] <-c( 0.9847415, 2.494663, 1.496661, 1.005588,0.9838738, 3.020978,2.980637)
+# thetaVector[[2]][3] <-c( 2.0026656, 1.497962, 2.500424, 1.105957,1.2952786, 3.007852,3.996341)
+# thetaVector[[2]][4] <-c( 2.0387631,-3.464018, 5.734396,-2.843561,3.0467568,-5.228119,3.339994)
+# 
+# thetaVector[[3]] <-c(-2.122957,3.85055,-1.93187,-2.059484,6.958547)
