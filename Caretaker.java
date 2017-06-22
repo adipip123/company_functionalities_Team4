@@ -1,14 +1,18 @@
 package p1;
 import java.util.ArrayList;
-
 public class Caretaker {
-	private ArrayList<Memento> projStatus= new ArrayList<Memento>();
-	
+	private ArrayList<Memento> version= new ArrayList<Memento>();
 	public void add(Memento m){
-		projStatus.add(m);
+		version.add(m);
 	}
-	
 	public Memento getPastState(int index){
-		return projStatus.get(index);
+		return version.get(index);
+	}
+	public int getSize(){
+		return version.size();
+	}
+	public ArrayList getversions()
+	{
+		return version;
 	}
 }

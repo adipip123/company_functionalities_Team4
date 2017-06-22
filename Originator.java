@@ -1,17 +1,17 @@
 package p1;
-
+import java.util.*;
 public class Originator {
-	String state;
-	public void setState(String state){
-		this.state=state;
+	ArrayList<String> a;
+	public void setState(ArrayList a){
+		this.a=a;
 	}
-	public String getState(){
-		return state;		
+	public ArrayList getState(){
+		return a;		
 	}
 	public Memento saveStateToMemento()	{ 
-		return new Memento(state);
+		return new Memento(a);
 	}
 	public void getStateFromMemento(Memento m){
-		state=m.getState();
+		a=m.getState();
 	}
 }

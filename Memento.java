@@ -1,16 +1,11 @@
 package p1;
-
+import java.util.*;
 public class Memento {
-	
-	String state;
-	public Memento(String state){
-		this.state=state;
+	ArrayList a;
+	public Memento(ArrayList a){
+		this.a=a;
 	}
-	
-	public String getState()
-	{
-		return state;
-	}
-	
+	public ArrayList getState(){
+		return a;
+	}	
 }
-

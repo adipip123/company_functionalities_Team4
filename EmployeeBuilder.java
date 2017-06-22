@@ -1,5 +1,4 @@
 package p1;
-
 public class EmployeeBuilder {
 	private int ssoid;
 	private String name;
@@ -26,7 +25,6 @@ public class EmployeeBuilder {
 		this.projectid = projectid;
 		return this;
 	}
-	
 	public Employee getEmployee(){	
 		return new Employee(ssoid,name,gender,age,projectid);
 	}
